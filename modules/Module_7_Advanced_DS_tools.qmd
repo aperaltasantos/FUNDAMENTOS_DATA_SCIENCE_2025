@@ -1,0 +1,650 @@
+---
+title: "Module 7 | Advanced Data Science Tools"
+author: "A. Peralta-Santos"
+date: today
+date-format: long
+format:
+  html:
+    preview: false
+    smooth-scroll: true
+    embed-resources: true
+    toc: true
+    toc-location: left
+    number-sections: true
+    number-depth: 3
+    code_download: true
+    code-copy: true
+execute:
+  warning: false
+  echo: TRUE
+  message: false
+params:
+  ano: 2024
+  escola: "ENSP"
+  pessoa: "Aluno"
+  edicao: "4ª"
+  curso: "Data Science with R in Healthcare"
+title-block-style: default
+---
+
+```{r pacotes}
+#| echo: false
+#| include: false
+
+# Packages
+required_packages <- c(
+                       "tidyverse",
+                       "rio",
+                       "usethis",
+                       "blastula",
+                       "gptstudio"
+                       )      
+
+for (pkg in required_packages) {
+  # install packages if not already present
+  if (!pkg %in% rownames(installed.packages())) {
+    install.packages(pkg)
+  }
+  
+  # load packages to this current session 
+  library(pkg, character.only = TRUE)
+}
+remove(required_packages)
+remove(pkg)
+```
+
+# Introdução
+
+O objetivo deste módulo não será o de ensinar todas as ferramentas disponíveis em R, mas o de guiar quando quiserem avançar para além dos conceitos dos módulos anteriores e para que possam retirar inspiração dos produtos mais recentes com exemplos disponíveis.
+
+# AMBIENTES REPRODUTÍVEIS
+
+A reprodutibilidade é um dos pilares da investigação.
+Esta deve ser parte de todo o ciclo de data science.
+Para isso é necessário haver *reprodutibilidade computacional*
+
+Isto pode incluir situações como:
+
+- Refazer uma análise
+  - Por um colega com outro sistema
+  - Pelo individuo noutro local ou tempo
+  - Por outros para validação dos nossos resultados
+- Reutilização de código
+- Colocar código em produção
+
+Para estas situações é necessário estabilidade no ambiente computacional que utilizamos.
+
+Para isso temos o RENV.
+
+```{=html}
+<iframe width="780" height="500" src="https://rstudio.github.io/renv/articles/renv.html" title="Introdução ao RENV"></iframe>
+```
+
+## RENV
+
+O RENV ajuda na criação de AMBIENTES REPRODUTÍVEIS ISOLADOS do sistema em que correm.
+
+Neste sistema existe uma separação claro entre o que são as bibliotecas do sistema e as bibliotecas do nosso projeto.
+
+![Sistema de Produção de um Sistema RENV](images/renv.png)
+
+Vantagens:
+
+- Diminuição dos problemas de correr num computador e não noutro
+- Não existe atualização automática de pacotes e dependências por isso se novas atualizações quebrarem o nosso projeto.
+
+Desvantagens:
+
+- Necessita de muito espaço
+
+### Como criar?
+
+- Ativar com o comando renv::init()
+- Colocar essa opção ao criar novo projeto
+
+![Possibilidade de criar um projeto com reprodutibilidade como prioridade](images/renv_init.png){width="100%"}
+
+### Como documentar?
+
+Existe a função snapshot() que permite documentar a origem e gravamos no ficheiro "renv.lock" que é o arquivo de todas as opções que definimos
+
+### Como colaborar?
+
+O comando renv::status() permite saber os próximos passos como eu, colega que quer reproduzir o que me foi enviado o possa fazer de forma semelhante.
+
+Este comando dá logo orientação como proceder.
+
+Worflow:
+
+1. init
+2. install
+3. snapshot
+produção
+4. restore
+
+## SLUSHY
+
+O pacote slushy foi criada pela empresa GSK.
+
+O objetivo é o de, ao invés de termos projetos congelados (como o RENV), mas o de termos programadores podemos querer avançar de forma lenta com o tempo sem perder estabilidade, introduzindo novas versões e verificando problemas
+
+Workflow:
+
+1. new_config()  
+2. slushy_init()
+3. slushy_add("packagename")
+4. slushy_drop("packagename")
+5. slushy_update(date = "2023-01-01") 
+
+- A vantagem do Slushy está em poder usar snapshot do CRAN para adquirir pacotes e atualizar o projeto.
+
+```{=html}
+<iframe width="780" height="500" src="https://gsk-biostatistics.github.io/slushy/" title="Slushy as an alternative to RENV"></iframe>
+```
+
+# INTERMIDIATE QUARTO
+
+## Includes
+
+Em Quarto, esiste um funcionalidade para reutilização eficiente de conteúdo entre vários documentos.
+
+Reutilizar conteúdo como secções de texto comuns, código ou resultados, em vários documentos em Quarto é possível usando o código "{{< include >}}". 
+
+Ex: Um boletim externo sem anexos para divulgação e um boletim interno com internos com anexos de validação.
+
+Exemplo:
+
+{{< include Include.qmd >}}
+
+```{r}
+#| echo: true
+
+# ---
+# title: "Relatórios Conjuntos"
+# ---
+# 
+# {{< include Relatório_hospitalA.qmd >}}
+# {{< include Relatório_hospitalB.qmd >}}
+# 
+# Usar os dados e outputs do documentos atuais...
+```
+
+
+Benefícios:
+
+1. Evitar a repetição de código
+2. Modularidade (múltiplos documento com parte modulares de mais fácil correção)
+3. Conteúdo Dinâmico
+
+## Parameters in Quarto
+
+Os parâmetros em Quarto é uma funcionalidade que aumenta a personalização dinâmica do conteúdo de um documento.
+
+Este tipo de funcionalidade é útil em várias situações:
+
+1. Análises de anos diferentes após correções de dados ou atualização da análises
+2. Criação de documento personalizados baseados em critérios que são definidos:
+    - ULS
+    - Região
+    - Cidade
+3. Relatórios para pessoas diferentes.
+
+```{r}
+#| eval: false
+
+---
+title: "Relatório de Saúde Regional"
+params:
+  ano: 2024
+  escola: "ENSP"
+  pessoa: "Aluno"
+  edicao: "4ª"
+  curso: "Data Science with R in Healthcare"
+---
+
+
+```
+  
+
+Nós estamos na `r params$edicao` do curso `r params$curso` na `r params$escola` e este documento pertence ao `r params$pessoa`.
+
+Um exemplo de como podemos mudar o output será correndo o seguinte código na consola.
+
+```{r}
+#| eval: false
+#| echo: false
+quarto::quarto_render(input="Module_7_Advanced_DS_tools.qmd",
+                      output_format = "html",
+                      execute_params = list(
+                        ano= 2026,
+                        escola= "ENSP",
+                        pessoa= "João Dionísio", # Mudar o nome do aluno e ver o output
+                        edicao= "4ª",
+                        curso= "Data Science with R in Healthcare"
+                      )
+                      )
+```
+
+
+## Quarto Dashboards 
+
+Dashboards são ferramentas interativas de visualização de dados que permitem aos utilizadores ver, analisar e compreender grandes quantidades de informação de uma forma rápida e fácil. 
+
+O objetivo de um dashboard é apresentar informações complexas de forma simplificada, permitindo ao utilizador fazer análises e tomar decisões baseadas em dados.
+
+Como já explorámos no módulo 2, o Quarto é uma ferramenta que permite criar dashboards interativos.
+
+Vamos explorar como criar um dashboard básico usando Quarto com a linguagem R.
+
+Dentro de um Dashboard podemos ter uma grande variadade de componentes:
+
+1. Mapas
+2. Gráficos
+3. Caixa de valor
+4. Anotações de texto dinêmicas
+5. Tabela
+
+Abaixo deixamos um exemplo de um dashboard.
+
+```{=html}
+<iframe width="100%" height="500" src="output/documents/Module_7_Dashboard.html" title="Exemplo de Dashboard em Quarto"></iframe>
+```
+
+Dashboards no Quarto são compostos por vários componentes para navegação e apresentação de dados. Elementos chave incluem:
+
+1. Navegação: Cada dashboard inclui uma barra de navegação no topo com título, opcionalmente um logo e autor. Exemplo de código para adicionar título e autor:
+
+```{r}
+#| eval: false
+---
+title: "Seu Título"
+author: "Seu Nome"
+---
+```
+
+2. Páginas: Para dashboards com múltiplas páginas, use cabeçalhos de nível 1 acima dos cabeçalhos de nível 2 que definem linhas e colunas.
+
+3. Layout: Os componentes dentro de uma página são organizados em linhas e colunas alternadas, definidas por cabeçalhos em markdown com (#, ##, ###) e especificações computacionais relativas ao seu comportamento em HTML. Por exemplo, um layout simples com duas linhas, sendo a segunda dividida em duas colunas seria algo assim:
+
+```{r}
+#| eval: false
+# Página 1
+## Linha {height=70%}
+Linha que ocupa 70% da página em altura
+## Linha 2 {height=30%}
+
+### Coluna A {width= 60%}
+Dentro da Linha 2 queremos uma coluna com 60% do temanho da largura da pagina
+
+### Coluna B {width= 40%}
+
+A Coluna B contém o resto da largura da página
+```
+
+4. Cards ou Cartões: São a unidade fundamental de exibição nos dashboards, criados automaticamente para células e conteúdo em markdown dentro de linhas e colunas. Cada pedaço de código separado e com output entre linhas ou colunas será colocado no Card.
+
+
+5. Orientação: Por predefinição, as páginas são organizadas primeiro por linha e depois por coluna. Isso pode ser alterado especificando a opção orientation: columns no documento.
+
+[Exemplo de Orientação em colunas](https://quarto.org/docs/dashboards/images/chart-focal-left.png)
+
+```{r}
+#| eval: false
+## Column {width=60%, orientation: columns}
+
+### ROW A {height=50%}
+
+### RoW B {height=50%}
+
+## Column {width=40%, orientation: columns}
+
+```
+
+6. Preenchimento vs. Fluxo (Fill vs. Flow): Cada elemento determina seu tamanho preenchendo o espaço disponível ou seguindo seu tamanho natural. Isso é controlado pelas classes .fill e .flow.
+
+```{r}
+#| eval: false
+## Row {.fill}
+
+## Row {.flow}
+```
+
+7. Scrolling: Por predefinição, o conteúdo do dashboard preenche todo o espaço disponível na página, mas pode ser configurado para usar a altura natural do conteúdo deixar o utilizador navegar para baixo.
+
+```{r}
+#| eval: false
+---
+title: "Urgências/CSP Dashboard"
+format: 
+  dashboard:
+    scrolling: true 
+logo: images/ensp.png
+fig-width: 10
+---
+```
+
+8. Conjuntos de Tabsets: É possível fazer separadores *tabsets* para incluir múltiplas visões de dados ou conteúdo de importância secundária. Eles são criados adicionando a classe .tabset a uma linha ou coluna.
+
+```{r}
+#| eval: false
+
+Primeiro Exemplo:
+  
+## Row {height=50%}
+
+## Row {.tabset}
+code chunks
+#| title: "Gráfico 1"
+
+code chunks 
+#| title: "Gráfico 2"
+
+Segundo Exemplo:
+  
+## Row {height=30%}
+
+### Column {.tabset}
+code chunks
+#| title: "Gráfico 1"
+
+code chunks 
+#| title: "Gráfico 2"
+
+
+### Column
+
+```
+
+[Exemplo de resultados de tabsets em Linhas](https://quarto.org/docs/dashboards/images/chart-focal-left.png)
+
+[Exemplo de resultado de tabsets em Colunas](https://quarto.org/docs/dashboards/images/chart-focal-left.png)
+
+9. Personalização: Tal como tudo em Quarto HTML é tudo personaçizável recorrendo a temas que são CSS e SASS. Apesar de úteis para embelezar um produto, a sua utilização é mais avançada que a proposta neste curso.
+
+Poderão ter um exemplo de alterações deste género no ficheiro custom.scss na pasta themes se quiserem explorar.
+
+Para vos apoiar na vossa jornada em Quarto Dashboard, diponibilizamos um exemplo entitulado Module_7_Dashboard.qmd para poderem ver como é construído e explorarem as alterações que podem fazer.
+
+
+# GIT E GITHUB - INTRO
+
+## O quê?
+
+O Git é um sistema de controle de versão distribuído, utilizado para controlar mudanças em arquivos de código durante o desenvolvimento de código.
+
+GitHub é uma plataforma baseada na web que utiliza os sistema Git para o armazenamento e gestão de repositórios de código.
+
+![Git como sistema de controlo de versões e GitHub como plataforma colaborativas e de partilha de projetos](images/git-github.png){width="100%"}
+
+## Porquê?
+
+Vantagens de usar um sistema git nos nossos projetos:
+
+1. Controlo de versões - Permite que múltiplas versões estejam armazenadas. Se um erro for introduzido, é simples reverter para uma versão anterior.
+2. Versões locais - Permite que cada colaborador num projeto trabalhe numa cópia local dos ficheiros e possa consultar o histórico de alterações.
+3. Ramificações e Fusão - Permite a criação de ramificações (branches) para testar análise e relatórios isoladamente. Estas ramificações podem ser fundidas (merge) de volta ao ramo principal (master/main) após a conclusão do seu desenvolvimento. 
+
+O plataforma Github permite o armazenamento e gestão de repositórios/projetos de código. Para além disso permite:
+
+1. Armazenamento remoto de código (limites de armazenamento é de 1 Gb com tráfego de dados de 1 Gb) com backup
+2. Interface Gráfica simples e intuitiva
+3. Pull requests e revisão de código antes de junção
+4. Integração com outras ferramentas
+
+## Como implementar?
+
+1. Criar [conta no GitHub](https://github.com/join)
+2. Podemos fazer a gestão de projetos de 2 formas:
+  - Github Desktop
+  - Dentro do Rstudio
+
+Por ser mais simples iremos utilizar o Github Deskop que pode ser instalar no seguinte [link](https://desktop.github.com/).
+
+![Exemplo da interface ](https://desktop.github.com/images/screenshot-windows-light.png)
+
+## Worflow
+
+## Criar/Clonar um repositório (Comandos init e add)
+
+![Repositórios](https://desktop.github.com/images/screenshot-windows-light.png)
+
+## Comandos Importantes GIT:
+
+1. *Commit* - Grava as alterações no repositório local
+2. *Pull* - Atualiza o repositório local com as alterações do repositório remoto.
+3. *Diff* - Mostra o estado atual do repositório, incluindo as alterações do repositório que ainda não foram adicionados ou comprometidos ao repositório.
+4. *Branch* - Criar ramificações para o repositório
+5. *Merge* - Fundir ramificações, normalmente para a ramificação principal
+6. *Log * - Mostra o histórico de commits. No Github é também utilizada a palavra Activity.
+7. *Push* - Envia as alterações do repositório local para o repositório remoto.
+
+# AUTOMATED REPORTING 
+
+## Github Actions
+
+GitHub Actions são uma funcionalidade da plataforma GitHub que permite a automação de workflows 
+dentro dos repositório GitHub, sendo uma forma de correr código de forma automática num computador que a plataforma mantêm.
+
+São especialmente úteis para processos de Integração Contínua (CI) e Entrega Contínua (CD).
+
+As ações são acionadas por eventos específicos no GitHub, como push, pull requests, criação de tags, entre outros.
+
+Componentes principais de um *workflow* de Github Actions:
+
+1. Ficheiro de Configuração: Um arquivo YAML no diretório .github/workflows do repositório
+2. Jobs - Consiste nos passos a serem executados
+3. Steps - Comandos a serem executados nos jobs
+4. Runs-on - Qual a plataforma a utilizar
+
+Objetivos destes componentes:
+
+1. Quando correr código?
+2. Iniciar o computador virtual que irá correr a acção
+3. Instalar o R
+4. Instalr os pacotes necessários
+5. Correr o código
+
+Estas acções são muito interessantes na construção de automatismos que podem ajudar ao rever código e em análises repetidas.
+
+Deixamos 2 exemplos de tarefas que podem ser automatizadas:
+
+## Task Schedualing (Gestão de tarefas automáticas)
+
+Deixamos o código do workflow que permite correr um script de forma automática com uma temporização regular.
+
+Se o nosso cósigo tivesse de atualizar dados isso tem de ser incoorporado no YAML ou no ficheiro a fazer render.
+
+```{r}
+#| eval: false
+
+# Definição de quando o workflow é acionado
+on:
+  schedule:
+    - cron: '0 9 1 * *' # Executa todos os dias às 9 da manhã UTC no primeiro dia do mês
+
+# Definição dos jobs
+jobs:
+  update_report: # Nome do job
+    runs-on: ubuntu-latest # Especifica que o job roda no último Ubuntu disponível
+
+    steps: # Passos a serem executados
+      - name: Set up R # Configura o ambiente R
+        uses: r-lib/actions/setup-r@v2 # Usa a ação de setup do R da r-lib
+        with:
+          # uses the RStudio Package Manager
+          use-public-rspm: true
+
+      - name: Install packages # Instala pacotes necessários
+        uses: r-lib/actions/setup-r-dependencies@v2 # Usa a ação de setup de dependências do R da r-lib
+        with:
+          packages: | # Lista de pacotes a serem instalados
+            any::quarto
+            any::base
+            any::backports
+            
+      - name: Check out repository # Faz checkout do repositório
+        uses: actions/checkout@v3 # Usa a ação padrão de checkout do GitHub
+
+      - name: Update Report # Atualiza o relatório
+        run: Rscript -e 'quarto::quarto_render("Cronjob.qmd")' # Comando para renderizar o relatório usando Quarto
+
+      - name: Commit results # Faz commit dos resultados
+        run: | # Conjunto de comandos para commit
+          git config --local user.email "actions@github.com" # Configura email para o commit
+          git config --local user.name "GitHub Actions" # Configura nome para o commit
+          git add Cronjob.html # Adiciona o arquivo HTML ao staging area
+          git commit -m 'Data updated' || echo "No changes to commit" # Faz o commit ou exibe uma mensagem se não houver mudanças
+          git push origin || echo "No changes to commit" # Faz push das mudanças ou exibe uma mensagem se não houver mudanças
+
+
+```
+
+
+## Emails automáticos
+
+Preparação de um ficheiro com as credenciais de um email.
+
+:::{.callout-warning}
+
+Não partilhar as credenciais em pastas públicas nem em repositórios públicos.
+
+Para os efeitos as credenciais indicadas são ficticias mas podem ser subtituídas por reais.
+
+:::
+
+```{r preparation_steps}
+#| eval: false
+
+# criar ficheiros de email - antes do workflow
+create_smtp_creds_file( file= "templates/email_credenciais",
+                        user= "peralta@outlook.com",
+                        provider= "outlook")
+
+# criar um ficheiro R com o código a correr.
+#Fonte: email_automatico.R
+email_a_enviar <- render_email("email_automatico.qmd") |> 
+                  add_attachment(file="output\figures\map_eu_HE.png",
+                                 filename= "mapa_analise")
+
+smtp_send(email_a_enviar,
+          from = "peralta@outlook.com",
+          to = "ensp@outlook.com",
+          subject= paste0("Análise de dia ", Sys.Date()),
+          credentials=creds_file("templates/email_credenciais"))
+
+# criar um ficheiro ymal com esta acção
+
+name: Send email using Quarto and blastula
+on: 
+  schedule:
+    - cron: '0 9 1 * *'
+jobs:
+  render:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+      - name: Install quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+      - name: Install dependencies
+        run: |
+          install.packages("blastula", type = "win.binary")
+        shell: Rscript {0}
+      - name: Update Report
+        run: Rscript -e source("email_automatico.R")
+      - name: Commit files
+        run: |
+          git config --local user.name github-actions
+          git config --local user.email "actions@github.com"
+          git add output/*
+          git commit -am "commit on $(date)"
+          git push origin main
+          
+```
+
+# GENERATIVE AI MODELS IN R Programming
+
+Desde Novembro de 2022 que se têm falado de modelos de inteligência artificial generativa.
+
+Este modelos, um subconjunto da inteligência artificial, são projetados para gerar novos dados que se assemelham a dados existentes. 
+
+
+### Modelos de Linguagem de Grande Escala (LLMs) na Programação
+
+LLMs como o ChatGPT ganharam atenção significativa pela sua capacidade de compreender e gerar texto semelhante ao humano. 
+
+Na programação e na gestão de dados, estes modelos podem ser aproveitados para escrever código, filtrar código ou explicar pedaços de código complexos. O seu entendimento de linguagem natural e linguagens de programação permite que elevar as capacidades dos utilizadoreses de maneira conversacional, com o potencial de aumentar significativamente a produtividade.
+
+Vantagens:
+
+- Gerar código ou adaptar código de outras linguas para R
+- Apoiar na gestão de erros ou bugs
+- Documentação e Explicação: A leitura da documentação por vezes é dificil numa fase inicial e os modelos permitem baixar a complexidade na leitura e explicar pedaços de código com múltiplos níveis de complexidade.
+
+Limitações:
+
+- Apesar de em códigos simples gerar poucos erros, existe a possibilidade do mesmo não seguir as boas práticas e ser optimizado para um melhor desempenho.
+  - Ex: Quando a pedir código de Data cleaning e Wrangling o CHAT GPT por vezes escolhe R base que é mais dificil de compreender.
+- Comprensão do Contexto: Quanto tempos documentos mais longos com múltiplas peças (ex: aplicações Shiny, múltiplos documentos Quarto) o ChatGPT dificilmente conseguirá compreder os nossos requisitos no prompt
+- Depedência: O ChatGPT deve ser um ferramenta para impulsionar a nossa aprendizagem da lingua e não ser a única ferramenta que utilizamos
+- Diferentes resultados para as mesmas perguntas.
+- Limitações temporais
+- Questões Éticas e Partilha de dados sensíveis.
+
+Existem múltplas LLM mas o mais conhecido é o CHAT-GPT
+
+```{=html}
+<iframe width="780" height="500" src="https://chat.openai.com/" title="LLM as a part for productive programming"></iframe>
+```
+
+Podemos pedir ao ChatGPT para nos elaborar uma função que calcule o BMI a partir de uma idade e altura.
+
+```{r}
+
+
+```
+
+A fase seguinte poderá ser a da integração de LLM nas nossas ferramentas de programação. Ex: RSTUDIO
+
+Existe o Copilot in RSTUDIO mas é pago.
+
+![Localização da Configuração do Copilot](images/copilot.png)
+
+## Como colocar o CHAT GPT no Rstudio - Não funciona
+
+O processo ainda não está muito otimizado mas colocamos os passos para instalar o add-in GPTSTUDIO:
+
+1. Necessário criar conta com a OpenAI
+2. Criar [API com a OPENAI](https://platform.openai.com/api-keys)
+3. Instalar o pacote usethis e correr o seguinte código  usethis::edit_r_environ()
+4. Criar variável OPENAI_API_KEY="api-key"
+
+:::{.callout-warning}
+Nunca colocar a API num reposirório público.
+:::
+
+5. Reiniciar a sessão
+6. Correr o Add-in do GPTStudio
+
+:::{.callout-warning}
+Para já não recomendamos este uso enquanto as ferramentas não estabilizarem no RSTUDIO.
+:::
+
+```{r}
+# Criar API da OpenAI
+# https://platform.openai.com/api-keys
+# Copiar a api key
+
+# usethis::edit_r_environ()
+# Adicionar e guardar a seguinte linha de código
+#OPENAI_API_KEY="api-key" copiada de cima
+# Sys.getenv("OPENAI_API_KEY")
+# Gptstudio deve estar nos add-ins 
+
+```
+
+Esta semana não existem exercícios para que o foco seja o projeto *capstone*.
+
+# Fim

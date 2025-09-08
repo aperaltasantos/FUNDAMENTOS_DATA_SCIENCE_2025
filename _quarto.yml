@@ -1,0 +1,20 @@
+project:
+  output-dir: output
+
+render:
+  - "*.qmd"
+  - "modules/**/*.qmd"
+  - "homework/**/*.qmd"
+
+bibliography: templates/references.bib
+
+format:
+  html:
+    smooth-scroll: true
+    self-contained: true
+    toc: true
+    toc-location: left
+  docx:
+    # Em Quarto, o nome é reference-doc (não "template")
+    reference-doc: templates/template1.docx
+
