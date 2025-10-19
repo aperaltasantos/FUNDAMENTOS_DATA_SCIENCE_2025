@@ -101,7 +101,7 @@ Use o dataset Core_Temperature.xlsx, e consulte a documentação em Core_Tempera
 
 Deve criar uma Tabela 1 comparando a distribuição das variáveis de confundimento (Age, FEMALE, BMI, CharlsonScore, SurgeryType, CHF) pelos pacientes que tiveram ISC (AnyInfection).
 
-1. O nome do objeto deve ser table 1
+1. O nome do objeto deve ser tabela1
 
 ```{r}
 
@@ -143,7 +143,7 @@ Crie um modelo de regressão logística para avaliar o efeito da temperatura no 
 
 Crie um modelo de regressão logística para avaliar o efeito da temperatura no risco de ISCs (AnyInfection) ajustado para Age, FEMALE, BMI, CharlsonScore e CHF.
 
-1. Criar modelo no objeto model_logit_uni
+1. Criar modelo no objeto model_logit_multi
 2. Criar tabela com dados da regressão no objeto model_logit_multi_tidy
 
 
@@ -167,13 +167,13 @@ Resposta:
 
 ### Exercicio M5.4 Tabelas de Regressão
 
-Crie uma tabela com os OR, p-value e Confidence Intervals do modelo construído em 6. Exporte a tabela criada em 8 para Word.
+Crie uma tabela com os OR, p-value e Confidence Intervals do modelo construído em 5.3.2. Exporte a tabela criada para Word.
 
 1. O objeto tabela deve-se chamar tbl_multi
 
 ```{r}
-# Criar uma tabela com o pacote gt a partir do resumo do modelo 'model4_tidy'
-tbl_multi <- 
+# Criar uma tabela com o pacote gt a partir do resumo do modelo 'model_logit_multi'
+
 ```
 
 ## FIM
@@ -183,12 +183,12 @@ tbl_multi <-
 ```{r validation for objects}
 #| code-fold: true
 #| echo: false
-if(exists("table1")) {
-  print(":) Objeto 'table1' criado com sucesso")
+if(exists("tabela1")) {
+  print(":) Objeto 'tabela1' criado com sucesso")
 } else {
-  print(":( Objeto 'table1' não existe")
-  table1 <- list(
-    '_data' = data_frame( variable = "A")
+  print(":( Objeto 'tabela1' não existe")
+  tabela1 <- list(
+    '_data' = data.frame(variable = "A")
   )
 }
 
@@ -217,7 +217,8 @@ if(exists("model_logit_uni")) {
   model_logit_uni <- data.frame(
     term = "A",
     std.error = -20,
-    statistic = 10
+    statistic = 10,
+    estimate = 15
   )
 }
 
@@ -228,7 +229,8 @@ if(exists("model_logit_uni_tidy")) {
   model_logit_uni_tidy <- data.frame(
         term = "A",
     std.error = -20,
-    statistic = 10
+    statistic = 10,
+    estimate = 15
   )
 }
 
@@ -240,7 +242,8 @@ if(exists("model_logit_multi")) {
   model_logit_multi <- data.frame(
         term = "A",
     std.error = -20,
-    statistic = 10
+    statistic = 10,
+    estimate = 15
   )
 }
 
@@ -248,10 +251,11 @@ if(exists("model_logit_multi_tidy")) {
   print(":) Objeto 'model_logit_multi_tidy' criado com sucesso")
 } else {
   print(":( Objeto 'model_logit_multi_tidy' não existe")
-  model_logit_uni_tidy <- data.frame(
+  model_logit_multi_tidy <- data.frame(
         term = "A",
     std.error = -20,
-    statistic = 10
+    statistic = 10,
+    estimate = 25
   )
 }
 
@@ -283,14 +287,14 @@ between <- function(a, b) {
 # model_logit_multi_tidy
 
 
-validate(table1[["_data"]], name = "Verifying table1") |>
-  validate_if(has_all_names("p.value"),colnames(), description = "Table 1 pede p-value") |>
+validate(tabela1[["_data"]], name = "Verifying tabela1") |>
+  validate_if(has_all_names("p.value"),colnames(), description = "Tabela1 pede p-value") |>
   validate_if(unique(variable) %in% c("age",
     "female",
     "bmi",
     "charlson_score",
     "surgery_type"),variable,description = "Tem as variáveis pedidas para a tabela 1") |> 
-  validate_if(nrow(table1[["_data"]])==5, description = "Tem apenas as variáveis pedidas para a tabela 1") |> 
+  validate_if(nrow(tabela1[["_data"]])==5, description = "Tem apenas as variáveis pedidas para a tabela 1") |> 
   add_results(report)
 
 
@@ -301,7 +305,7 @@ validate(model_logit_uni_tidy, name = "Verifying model_logit_uni_tidy") |>
   validate_if(nrow(model_logit_uni_tidy)==2, description = "Tem apenas as variáveis pedidas para a regressão univariada") |>
   validate_cols(between(0,1.4),"estimate",description = "Valor dos coeficientes dentro do esperado") |> 
   validate_cols(between(0.05,2.3),"std.error",description = "Valor do Desvio-padrão dentro do esperado") |> 
-  validate_cols(between(-5,5),"statistic",description = "Valor do Desvio-padrão dentro do esperado") |> 
+  validate_cols(between(-5.4,5),"statistic",description = "Valor do Desvio-padrão dentro do esperado") |> 
   add_results(report)
 
 validate(model_logit_multi_tidy, name = "Verifying model_logit_multi_tidy") |>
@@ -315,7 +319,7 @@ validate(model_logit_multi_tidy, name = "Verifying model_logit_multi_tidy") |>
   add_results(report)
 
 validate(tbl_multi[["_data"]] , name = "Verifying tbl_multi") |>
-  validate_if(has_all_names("term","estimate"  "std.error" "statistic" "p.value"   "conf.low"  "conf.high"),colnames(), description = "Tabela tem as colunas pedidas") |>
+  validate_if(has_all_names("term", "estimate" , "p.value"   ,"conf.low" , "conf.high"),colnames(), description = "Tabela tem as colunas pedidas") |>
   validate_if(unique(term) %in% c("(Intercept)",
                                   "twa_temp",
                                   "age",
@@ -323,18 +327,18 @@ validate(tbl_multi[["_data"]] , name = "Verifying tbl_multi") |>
                                   "bmi",
                                   "charlson_score",
                                   "chf"),term,description = "Tem as variáveis pedidas para a tabela final") |> 
-  validate_if(nrow(table1[["_data"]])==7, description = "Tem apenas as variáveis pedidas para a tabela final") |> 
+  validate_if(nrow(tbl_multi[["_data"]])==7, description = "Tem apenas as variáveis pedidas para a tabela final") |> 
   add_results(report)
 
 get_results(report)
 
-save_report(report, output_file ="outputs/validation_report5_resolvido.html")
+save_report(report, output_file ="validation_report5_resolvido.html")
 
 rm(list = ls())
 
 ```
 
 ```{=html}
-<iframe width="100%" height=1000 src="outputs/validation_report5_resolvido.html"></iframe>
+<iframe width="100%" height=1000 src="validation_report5_resolvido.html"></iframe>
 ```
 
